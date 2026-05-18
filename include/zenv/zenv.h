@@ -9,6 +9,7 @@ void        zenv_clear_error(void);
 
 int zenv_cmd_shell_init(int argc, char **argv);
 int zenv_cmd_var(int argc, char **argv);
+int zenv_cmd_reload(int argc, char **argv);
 int zenv_cmd_version(int argc, char **argv);
 
 #endif

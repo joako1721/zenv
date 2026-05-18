@@ -2,39 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "zenv/emit.h"
 #include "zenv/paths.h"
-#include "zenv/quote.h"
 #include "zenv/vars.h"
 #include "zenv/zenv.h"
-
-static int emit_export(const char *name, const char *value)
-{
-	char *q = zenv_shell_quote(value);
-	if (!q) return -1;
-	printf("export %s=%s\n", name, q);
-	free(q);
-	return 0;
-}
-
-static int emit_persistent_vars(void)
-{
-	char *path = zenv_state_path("vars.toml");
-	if (!path) return -1;
-	zenv_vars_t *v = zenv_vars_new();
-	if (!v) { free(path); return -1; }
-	int rc = zenv_vars_load(v, path);
-	if (rc == 0) {
-		size_t n = zenv_vars_count(v);
-		for (size_t i = 0; i < n && rc == 0; i++) {
-			const char *name, *value;
-			zenv_vars_at(v, i, &name, &value);
-			rc = emit_export(name, value);
-		}
-	}
-	zenv_vars_free(v);
-	free(path);
-	return rc;
-}
 
 static int emit_zsh(void)
 {
@@ -44,8 +15,7 @@ static int emit_zsh(void)
 	    "  local _mut=0\n"
 	    "  case \"$1\" in\n"
 	    "    var)  case \"$2\" in set|unset)            _mut=1 ;; esac ;;\n"
-	    "    mode) case \"$2\" in off|'')               _mut=1\n"
-	    "                          ;;\n"
+	    "    mode) case \"$2\" in off|'')               _mut=1 ;;\n"
 	    "                       ls)                    _mut=0 ;;\n"
 	    "                       *)                     _mut=1 ;;\n"
 	    "          esac ;;\n"
@@ -62,10 +32,29 @@ static int emit_zsh(void)
 	    "}\n",
 	    stdout);
 
-	if (emit_persistent_vars() != 0) return -1;
+	char *path = zenv_state_path("vars.toml");
+	if (!path) return -1;
+	zenv_vars_t *v = zenv_vars_new();
+	if (!v) { free(path); return -1; }
 
-	fputs("# --- end zenv shell-init ---\n", stdout);
-	return 0;
+	int rc = zenv_vars_load(v, path);
+	if (rc == 0)
+		rc = zenv_emit_state(stdout, v, getenv("_ZENV_LOADED"));
+
+	zenv_vars_free(v);
+	free(path);
+
+	if (rc == 0) {
+		fputs(
+		    "if [ \"$SHLVL\" = 1 ] "
+		    "&& [ -n \"${starting_path-}\" ] "
+		    "&& [ -d \"$starting_path\" ]; then\n"
+		    "  cd -- \"$starting_path\"\n"
+		    "fi\n"
+		    "# --- end zenv shell-init ---\n",
+		    stdout);
+	}
+	return rc;
 }
 
 int zenv_cmd_shell_init(int argc, char **argv)

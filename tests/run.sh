@@ -59,6 +59,27 @@ if command -v zsh >/dev/null 2>&1; then
 	check_eq "var get returns the value" "10.10.14.129" "$BIN" var get CHECK_IP
 	check    "var unset removes it" sh -c "$BIN var unset CHECK_IP && ! $BIN var get CHECK_IP"
 
+	# reload: simulate a long-running shell that loaded vars, then another
+	# shell mutated vars.toml behind its back.
+	check "reload picks up new vars and unsets removed ones" zsh -c "
+		eval \"\$($BIN shell-init zsh)\"
+		$BIN var unset EVIL >/dev/null
+		$BIN var set NEW value >/dev/null
+		eval \"\$($BIN reload)\"
+		[ -z \"\$EVIL\" ] && [ \"\$NEW\" = value ]
+	"
+
+	# cd hook: starting_path should cd the shell on init.
+	cd_target=$(mktemp -d)
+	"$BIN" var set starting_path "$cd_target" >/dev/null
+	# zsh increments SHLVL on launch, so SHLVL=0 in env gives SHLVL=1 inside.
+	check "shell-init cds to \$starting_path on SHLVL=1" env SHLVL=0 zsh -c "
+		eval \"\$($BIN shell-init zsh)\"
+		[ \"\$PWD\" = \"$cd_target\" ]
+	"
+	"$BIN" var unset starting_path >/dev/null
+	rmdir "$cd_target"
+
 	rm -rf "$tmpstate"
 	unset XDG_STATE_HOME
 fi

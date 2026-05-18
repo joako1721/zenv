@@ -20,7 +20,7 @@ SRC         := $(wildcard src/*.c) third_party/tomlc99/toml.c
 OBJ         := $(SRC:.c=.o)
 BIN         := zenv
 
-TESTS       := tests/test_quote tests/test_atomic tests/test_vars
+TESTS       := tests/test_quote tests/test_atomic tests/test_vars tests/test_emit
 
 .PHONY: all dev test clean install uninstall fmt compile_commands unit-tests
 
@@ -34,6 +34,10 @@ tests/test_atomic: tests/test_atomic.c src/atomic.c src/error.c
 
 tests/test_vars: tests/test_vars.c src/vars.c src/atomic.c src/error.c \
                  third_party/tomlc99/toml.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+
+tests/test_emit: tests/test_emit.c src/emit.c src/quote.c src/vars.c \
+                 src/atomic.c src/error.c third_party/tomlc99/toml.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 unit-tests: $(TESTS)

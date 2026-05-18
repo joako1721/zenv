@@ -13,6 +13,7 @@ static int usage(FILE* out)
 		  "  var get <name>         print variable value\n"
 		  "  var unset <name>       remove persistent variable\n"
 		  "  var ls                 list persistent variables\n"
+		  "  reload                 re-sync exports against vars.toml\n"
 		  "  version                print version\n"
 		  "\n"
 		  "mutating commands emit shell code on stdout; eval it.\n",
@@ -32,6 +33,8 @@ int main(int argc, char** argv)
 		rc = zenv_cmd_shell_init(argc - 2, argv + 2);
 	} else if (!strcmp(cmd, "var")) {
 		rc = zenv_cmd_var(argc - 2, argv + 2);
+	} else if (!strcmp(cmd, "reload")) {
+		rc = zenv_cmd_reload(argc - 2, argv + 2);
 	} else if (!strcmp(cmd, "version") || !strcmp(cmd, "--version") || !strcmp(cmd, "-v")) {
 		rc = zenv_cmd_version(argc - 2, argv + 2);
 	} else if (!strcmp(cmd, "help") || !strcmp(cmd, "--help") || !strcmp(cmd, "-h")) {
