@@ -1,0 +1,10 @@
+/zenv
+*.o
+*.d
+compile_commands.json
+
+.cache/
+.claude/
+
+*.pkg.tar.*
+*.tar.gz

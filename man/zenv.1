@@ -1,0 +1,44 @@
+.TH ZENV 1 "2026-05-18" "zenv 0.1.0" "User Commands"
+.SH NAME
+zenv \- personal shell environment toolkit
+.SH SYNOPSIS
+.B zenv
+.I command
+.RI [ args... ]
+.SH DESCRIPTION
+.B zenv
+manages persistent shell variables, named "modes" of aliases/functions/env,
+and cwd persistence across terminal sessions. Mutating subcommands emit
+shell code on stdout; install the shell hook with
+.B eval "$(zenv shell-init zsh)"
+in your rc.
+.SH COMMANDS
+.TP
+.B shell-init \fIshell\fR
+Print shell glue. Supported shells: zsh.
+.TP
+.B var set \fIname\fR \fIvalue\fR
+Persist a variable and emit its export.
+.TP
+.B var get \fIname\fR
+Print a variable's value.
+.TP
+.B var unset \fIname\fR
+Remove a persistent variable; emit unset.
+.TP
+.B var ls
+List persistent variables.
+.TP
+.B version
+Print version.
+.SH FILES
+.TP
+.I ~/.config/zenv/
+Mode definitions.
+.TP
+.I ~/.local/state/zenv/
+Per-host state (vars, active modes, cwd history).
+.SH AUTHOR
+jt
+.SH LICENSE
+MIT

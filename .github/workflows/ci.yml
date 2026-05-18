@@ -1,0 +1,31 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install zsh (for shell-init eval test)
+        run: sudo apt-get update && sudo apt-get install -y zsh
+
+      - name: Vendor tomlc99
+        run: ./scripts/vendor-tomlc99.sh
+
+      - name: Build (release)
+        run: make
+
+      - name: Build (ASan + UBSan) and run tests
+        run: make test
+
+      - name: Install into staging dir
+        run: |
+          make DESTDIR="$PWD/stage" PREFIX=/usr install
+          test -x stage/usr/bin/zenv
+          test -f stage/usr/share/man/man1/zenv.1
+          test -f stage/usr/share/licenses/zenv/LICENSE
