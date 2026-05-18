@@ -1,24 +1,32 @@
 .TH ZENV 1 "2026-05-18" "zenv 0.1.0" "User Commands"
 .SH NAME
-zenv \- personal shell environment toolkit
+zenv \- persistent shell variables
 .SH SYNOPSIS
 .B zenv
 .I command
 .RI [ args... ]
 .SH DESCRIPTION
 .B zenv
-manages persistent shell variables, named "modes" of aliases/functions/env,
-and cwd persistence across terminal sessions. Mutating subcommands emit
-shell code on stdout; install the shell hook with
+stores key=value pairs in
+.I ~/.local/state/zenv/vars.toml
+and exports them into every new shell. Install the hook in your rc:
+.PP
+.RS
 .B eval "$(zenv shell-init zsh)"
-in your rc.
+.RE
+.PP
+Mutating subcommands emit shell code on stdout; the wrapper function
+installed by
+.B shell-init
+evals it for you.
 .SH COMMANDS
 .TP
 .B shell-init \fIshell\fR
 Print shell glue. Supported shells: zsh.
 .TP
 .B var set \fIname\fR \fIvalue\fR
-Persist a variable and emit its export.
+Persist a variable and emit its export. Name must match
+[A-Za-z_][A-Za-z0-9_]*.
 .TP
 .B var get \fIname\fR
 Print a variable's value.
@@ -27,17 +35,51 @@ Print a variable's value.
 Remove a persistent variable; emit unset.
 .TP
 .B var ls
-List persistent variables.
+List persistent variables as NAME=value lines (human-readable, not eval-safe).
+.TP
+.B reload
+Re-sync the current shell with
+.IR vars.toml :
+unset variables that were removed elsewhere, export current values.
+Uses the
+.B $_ZENV_LOADED
+env var emitted by
+.B shell-init
+to compute the diff.
 .TP
 .B version
 Print version.
+.SH STARTING DIRECTORY
+If the persistent variable
+.B starting_path
+is set,
+.B shell-init
+emits a
+.BR cd (1)
+to that directory, guarded by
+.BR "[ \(dq$SHLVL\(dq = 1 ]"
+so nested shells and subshells are not affected. Set it with:
+.PP
+.RS
+.B zenv var set starting_path "$PWD"
+.RE
 .SH FILES
 .TP
-.I ~/.config/zenv/
-Mode definitions.
+.I ~/.local/state/zenv/vars.toml
+Persistent variable store. Mode 0600.
+.SH ENVIRONMENT
 .TP
-.I ~/.local/state/zenv/
-Per-host state (vars, active modes, cwd history).
+.B XDG_STATE_HOME
+Overrides the default state directory.
+Defaults to
+.IR ~/.local/state .
+.TP
+.B _ZENV_LOADED
+Space-separated names of variables loaded by
+.BR shell-init .
+Read by
+.B reload
+to compute what needs to be unset.
 .SH AUTHOR
 jt
 .SH LICENSE
