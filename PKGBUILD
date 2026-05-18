@@ -2,14 +2,15 @@
 pkgname=zenv
 pkgver=0.1.0
 pkgrel=1
-pkgdesc="Personal shell environment toolkit: persistent vars, modes, cwd recovery"
+pkgdesc="Persistent shell variables for zsh, written in C"
 arch=('x86_64')
 url="https://github.com/joako1721/zenv"
 license=('MIT')
 depends=()
 makedepends=('gcc')
+checkdepends=('zsh')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('SKIP')  # replace with `makepkg -g` output before publishing
+sha256sums=('SKIP')
 
 build() {
 	cd "$pkgname-$pkgver"
